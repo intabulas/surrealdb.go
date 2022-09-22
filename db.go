@@ -3,7 +3,7 @@ package surrealdb
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -36,11 +36,13 @@ func Unmarshal(data interface{}, v interface{}) error {
 	if !ok {
 		return InvalidResponse
 	}
-	sliceFlag := isSlice(v)
+
+	// use reflection to see if v is a slice
+	isSlice := reflect.TypeOf(v).Kind() == reflect.Slice
 
 	var jsonBytes []byte
 	var err error
-	if !sliceFlag && len(assertedData) > 0 {
+	if !isSlice && len(assertedData) > 0 {
 		jsonBytes, err = json.Marshal(assertedData[0])
 	} else {
 		jsonBytes, err = json.Marshal(assertedData)
@@ -245,18 +247,4 @@ func (self *DB) resp(_ string, params []interface{}, res interface{}) (interface
 
 	return res, nil
 
-}
-
-func isSlice(possibleSlice interface{}) bool {
-	slice := false
-
-	switch v := possibleSlice.(type) {
-	default:
-		res := fmt.Sprintf("%s", v)
-		if res == "[]" || res == "&[]" || res == "*[]" {
-			slice = true
-		}
-	}
-
-	return slice
 }
